@@ -41,8 +41,8 @@ analysis. This will demonstrate how pre-defined workflows can be setup and
 shared across users, projects and labs.
 """
 # %%
-data_dir = os.path.abspath('/media/Data/Lab_Projects/RCF/neuroimaging/RCF_Bids/derivatives/fmriprep')
-output_dir = '/media/Data/work/RCF_FSLNoScrub'
+data_dir = os.path.abspath('/gpfs/gibbs/pi/levy_ifat/Or/RCF_Bids/derivatives/fmriprep')
+output_dir = '/gpfs/gibbs/pi/levy_ifat/Or/RCF_Bids/Results'
 fwhm = 6
 tr = 1
 removeTR = 9#Number of TR's to remove before initiating the analysis
@@ -123,7 +123,7 @@ infosource.iterables = [('subject_id', subject_list)]
 templates = {'func': os.path.join(data_dir, 'sub-{subject_id}', 'ses-1', 'func', 'sub-{subject_id}_ses-1_task-task*_space-MNI152NLin2009cAsym_res-2_desc-preproc_bold.nii.gz'),
              'mask': os.path.join(data_dir, 'sub-{subject_id}', 'ses-1', 'func', 'sub-{subject_id}_ses-1_task-task*_space-MNI152NLin2009cAsym_res-2_desc-brain_mask.nii.gz'),
              'regressors': os.path.join(data_dir, 'sub-{subject_id}', 'ses-1', 'func', 'sub-{subject_id}_ses-1_task-task*_desc-confounds_regressors.tsv'),
-             'events': os.path.join('/media/Data/Lab_Projects/RCF/neuroimaging/RCF_Bids', 'event_files','ses-1', 'sub-{subject_id}.csv')}
+             'events': os.path.join('/gpfs/gibbs/pi/levy_ifat/Or/RCF_Bids', 'event_files','ses-1', 'sub-{subject_id}.csv')}
 
 
 selectfiles = pe.Node(nio.SelectFiles(templates,
@@ -193,9 +193,26 @@ cond_names = ['Aplus1','Bplus1','US_Bplus1','US_Aplus1', 'minus1', 'Aplus2','Bpl
 cont1 = ('Shock_NoShockGeneral', 'T', cond_names, [-0.25, -0.25, 0.25, 0.25, 0, -0.25, -0.25, 0.25, 0.25, 0])
 # add CS+ vs. baseline
 cont2 = ('CS+ > nothing', 'T', cond_names, [0.25, 0.25, 0, 0, 0 , 0.25, 0.25, 0, 0, 0])
+# US vs baseline
+cont3 = ('CS+US > nothing', 'T', cond_names, [0, 0, 0.25, 0.25, 0 , 0, 0, 0.25, 0.25, 0])
+## comparing first and second halfs3
+cont4 = ('CS+1 > cs-1', 'T', cond_names, [0.5, 0.5, 0, 0, -1 , 0, 0, 0, 0, 0])
+cont5 = ('CS+2 > cs-2', 'T', cond_names, [0, 0, 0, 0, 0 , 0.5, 0.5, 0, 0, -1])
+
+# add contrast for CS- vs. baseline in each part (1/2) - to see if PTSD are higher in 1st but not 2nd half
+cont6 = ('CSminus1 > baseline', 'T', cond_names, [0, 0, 0, 0, 1 , 0, 0, 0, 0, 0])
+cont7 = ('CSminus2 > baseline', 'T', cond_names, [0, 0, 0, 0, 0 , 0, 0, 0, 0, 1])
+
+# add contrast for each stimulus (A/B)
+# Only A (1 and 2)
+cont8 = ('CSA+1 > cs-1', 'T', cond_names, [1, 0, 0, 0, -1 , 0, 0, 0, 0, 0])
+cont9 = ('CSA+2 > cs-2', 'T', cond_names, [0, 0, 0, 0, 0 , 1, 0, 0, 0, -1])
+# only B (1 and 2)
+cont10 = ('CSB+1 > cs-1', 'T', cond_names, [0, 1, 0, 0, -1 , 0, 0, 0, 0, 0])
+cont11 = ('CSB+2 > cs-2', 'T', cond_names, [0, 0, 0, 0, 0 , 0, 1, 0, 0, -1])
 
 
-contrasts = [cont1, cont2]
+contrasts = [cont1, cont2, cont3, cont4, cont5, cont6, cont7, cont8, cont9, cont10, cont11]
 
 level1design.inputs.interscan_interval = tr
 level1design.inputs.bases = {'dgamma': {'derivs': False}}
@@ -206,10 +223,10 @@ Use :class:`nipype.interfaces.fsl.FEATModel` to generate a run specific mat
 file for use by FILMGLS
 """
 
-modelgen = pe.MapNode(
+modelgen = pe.Node(
     interface=fsl.FEATModel(),
-    name='modelgen',
-    iterfield=['fsf_file', 'ev_files'])
+    name='modelgen'
+    )
 """
 Use :class:`nipype.interfaces.fsl.FILMGLS` to estimate a model specified by a
 mat file and a functional run
@@ -217,10 +234,10 @@ mat file and a functional run
 mask =  pe.Node(interface= fsl.maths.ApplyMask(), name = 'mask')
 
 
-modelestimate = pe.MapNode(
+modelestimate = pe.Node(
     interface=fsl.FILMGLS(smooth_autocorr=True, mask_size=5, threshold=100),
-    name='modelestimate',
-    iterfield=['design_file', 'in_file', 'tcon_file'])
+    name='modelestimate'
+    )
 
 
 # %%
@@ -246,7 +263,7 @@ modelfit.connect([
 
 # %% Adding data sink
 # Datasink
-datasink = pe.Node(nio.DataSink(base_directory=os.path.join(output_dir, 'Sink_respNOScrub')),
+datasink = pe.Node(nio.DataSink(base_directory=os.path.join(output_dir, 'Sink_RCF')),
                                          name="datasink")
 
 
