@@ -29,8 +29,8 @@ fsl.FSLCommand.set_default_output_type('NIFTI_GZ')
 
 
 # %%
-data_dir = os.path.abspath('/media/Data/Lab_Projects/PTSD_Reversal/neuroimaging/BIDS/derivatives/fmriprep')
-output_dir = '/media/Data/work/RV_FSL'
+data_dir = os.path.abspath('/gpfs/gibbs/pi/levy_ifat/Nachshon/shared/reversal/fmriprep')
+output_dir = '/gpfs/gibbs/pi/levy_ifat/Or/RV_FSL'
 fwhm = 6
 tr = 2 
 
@@ -99,15 +99,18 @@ def saveScrub(regressors_file, thr):
     return str(perFile)
 
 # %%
-subject_list = ['001' , '004', '005', '008', '010', '013', '016', '021', '026',
-       '027', '030', '032', '038', '043', '047', '048', '053', '055',
-       '056', '059', '062', '063', '065', '066', '071', '072', '073',
-       '081', '082', '083', '085', '086', '087', '101', '102', '103',
-       '104', '106', '107', '108', '112', '113', '118', '122', '124',
-       '131', '132', '135', '136', '137', '140', '143', '144', '146',
-       '147', '148', '151', '160', '161', '165', '166', '169', '177',
-       '178', '179', '182', '183', '184', '185', '186', '188', '190',
-       '203', '204', '205', '1205', '1207', '1222', '1223', '1232'] # 
+subject_list = ['001', '004', '005', '008', '010', '011', '013', '016',
+'020', '021', '022', '024', '027', '030', '038', '043',
+'047', '048', '053', '055', '059', '062', '063', '065',
+'071', '072', '080', '081', '082', '083', '086', '087',
+'089', '095', '100', '101', '102', '103', '104', '105',
+'106', '107', '108', '112', '113', '114', '118', '121',
+'122', '124', '126', '130', '131', '132', '136', '144',
+'146', '150', '152', '153', '154', '158', '160', '161',
+'165', '166', '167', '168', '169', '170', '171', '172',
+'173', '177', '178', '179', '182', '183', '184', '185',
+'189', '193', '196', '200', '202', '203', '204', '205',
+'1205', '1207', '1222', '1223', '1232',] # 
 # Map field names to individual subject runs.
 
 
@@ -121,7 +124,7 @@ infosource.iterables = [('subject_id', subject_list)]
 templates = {'func': os.path.join(data_dir, 'sub-{subject_id}', 'ses-1', 'func', 'sub-{subject_id}_ses-1_task*_space-MNI152NLin2009cAsym_res-2_desc-preproc_bold.nii.gz'),
              'mask': os.path.join(data_dir, 'sub-{subject_id}', 'ses-1', 'func', 'sub-{subject_id}_ses-1_task*_space-MNI152NLin2009cAsym_res-2_desc-brain_mask.nii.gz'),
              'regressors': os.path.join(data_dir, 'sub-{subject_id}', 'ses-1', 'func', 'sub-{subject_id}_ses-1_task*_desc-confounds_regressors.tsv'),
-             'events': os.path.join('/media/Data/Lab_Projects/PTSD_Reversal/neuroimaging/BIDS', 'eventfiles', 'sub-{subject_id}.csv')}
+             'events': os.path.join('/gpfs/gibbs/pi/levy_ifat/Or/RV_FSL', 'eventfiles', 'sub-{subject_id}.csv')}
 
 
 selectfiles = pe.Node(nio.SelectFiles(templates,
@@ -203,9 +206,19 @@ cont6 = ('CS+ > CS-1stHalf', 'T', cond_names, [0, -1, 1, 0, 0 , 0])
 # CS+ vs. CS- 2nd half
 cont7 = ('CS+ > CS-2stHalf', 'T', cond_names, [0, 0, 0, 0, 1 , -1])
 
+# CS- vs. baseline all 
+cont8 = ('CS- > baselineAll', 'T', cond_names, [.5, 0, 0, 0, 0 , .5])
+# CS- vs. baseline 1st half
+cont9 = ('CS- > baseline1stHalf', 'T', cond_names, [1, 0, 0, 0, 0 , 0])
+# CS- vs. baseline 2nd half
+cont10 = ('CS- > baseline2ndHalf', 'T', cond_names, [0, 0, 0, 0, 0 , 1])
 
+## adding CS+ vs. baseline in the two halfs
+cont11 = ('CS+ > nothing_1stHalf', 'T', cond_names, [0, 0, 1, 0, 0 , 0])
+cont12 = ('CS+ > nothing_2ndHalf', 'T', cond_names, [0, 0, 0, 0, 1 , 0])
 
-contrasts = [cont1, cont2, cont3, cont4, cont5, cont6, cont7]
+contrasts = [cont1, cont2, cont3, cont4, cont5, cont6, cont7, 
+cont8, cont9, cont10, cont11, cont12]
 
 level1design.inputs.interscan_interval = tr
 level1design.inputs.bases = {'dgamma': {'derivs': False}}
