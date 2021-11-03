@@ -17,14 +17,16 @@ using namespace stan::math;
 
 
 stan::math::profile_map profiles__;
-static constexpr std::array<const char*, 12> locations_array__ = 
+static constexpr std::array<const char*, 14> locations_array__ = 
 {" (found before start of program)",
  " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 9, column 4 to column 15)",
  " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 10, column 4 to column 14)",
  " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 12, column 4 to column 24)",
  " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 13, column 4 to column 12)",
- " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 16, column 2 to column 21)",
- " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 17, column 2 to column 46)",
+ " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 16, column 2 to column 23)",
+ " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 17, column 2 to column 22)",
+ " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 18, column 2 to column 21)",
+ " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 19, column 2 to column 46)",
  " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 4, column 4 to column 19)",
  " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 5, column 11 to column 12)",
  " (in '/home/or/SIA_PTSD/Stan_model/robust_reg.stan', line 5, column 4 to column 16)",
@@ -69,18 +71,18 @@ class robust_reg_model final : public model_base_crtp<robust_reg_model> {
       pos__ = std::numeric_limits<int>::min();
       
       pos__ = 1;
-      current_statement__ = 7;
+      current_statement__ = 9;
       context__.validate_dims("data initialization","N","int",
            std::vector<size_t>{});
       N = std::numeric_limits<int>::min();
       
-      current_statement__ = 7;
-      N = context__.vals_i("N")[(1 - 1)];
-      current_statement__ = 7;
-      check_greater_or_equal(function__, "N", N, 0);
-      current_statement__ = 8;
-      validate_non_negative_index("x", "N", N);
       current_statement__ = 9;
+      N = context__.vals_i("N")[(1 - 1)];
+      current_statement__ = 9;
+      check_greater_or_equal(function__, "N", N, 0);
+      current_statement__ = 10;
+      validate_non_negative_index("x", "N", N);
+      current_statement__ = 11;
       context__.validate_dims("data initialization","x","double",
            std::vector<size_t>{static_cast<size_t>(N)});
       x__ = Eigen::Matrix<double, -1, 1>(N);
@@ -88,22 +90,22 @@ class robust_reg_model final : public model_base_crtp<robust_reg_model> {
       
       {
         std::vector<local_scalar_t__> x_flat__;
-        current_statement__ = 9;
+        current_statement__ = 11;
         x_flat__ = context__.vals_r("x");
-        current_statement__ = 9;
+        current_statement__ = 11;
         pos__ = 1;
-        current_statement__ = 9;
+        current_statement__ = 11;
         for (int sym1__ = 1; sym1__ <= N; ++sym1__) {
-          current_statement__ = 9;
+          current_statement__ = 11;
           assign(x, x_flat__[(pos__ - 1)],
             "assigning variable x", index_uni(sym1__));
-          current_statement__ = 9;
+          current_statement__ = 11;
           pos__ = (pos__ + 1);
         }
       }
-      current_statement__ = 10;
+      current_statement__ = 12;
       validate_non_negative_index("y", "N", N);
-      current_statement__ = 11;
+      current_statement__ = 13;
       context__.validate_dims("data initialization","y","double",
            std::vector<size_t>{static_cast<size_t>(N)});
       y__ = Eigen::Matrix<double, -1, 1>(N);
@@ -111,16 +113,16 @@ class robust_reg_model final : public model_base_crtp<robust_reg_model> {
       
       {
         std::vector<local_scalar_t__> y_flat__;
-        current_statement__ = 11;
+        current_statement__ = 13;
         y_flat__ = context__.vals_r("y");
-        current_statement__ = 11;
+        current_statement__ = 13;
         pos__ = 1;
-        current_statement__ = 11;
+        current_statement__ = 13;
         for (int sym1__ = 1; sym1__ <= N; ++sym1__) {
-          current_statement__ = 11;
+          current_statement__ = 13;
           assign(y, y_flat__[(pos__ - 1)],
             "assigning variable y", index_uni(sym1__));
-          current_statement__ = 11;
+          current_statement__ = 13;
           pos__ = (pos__ + 1);
         }
       }
@@ -174,8 +176,12 @@ class robust_reg_model final : public model_base_crtp<robust_reg_model> {
       nu = in__.template read<local_scalar_t__>();
       {
         current_statement__ = 5;
-        lp_accum__.add(gamma_lpdf<propto__>(nu, 2, 0.1));
+        lp_accum__.add(normal_lpdf<propto__>(alpha, 0, 10));
         current_statement__ = 6;
+        lp_accum__.add(normal_lpdf<propto__>(beta, 0, 10));
+        current_statement__ = 7;
+        lp_accum__.add(gamma_lpdf<propto__>(nu, 2, 0.1));
+        current_statement__ = 8;
         lp_accum__.add(
           student_t_lpdf<propto__>(y, nu, add(alpha, multiply(beta, x)),
             sigma));
